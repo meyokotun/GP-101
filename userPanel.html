@@ -1,0 +1,80 @@
+<div style="padding:20px;">
+  <h3>User Panel</h3>
+  <button onclick="logout()" style="float:right;">Logout</button>
+
+  <input id="name" placeholder="Customer Name" />
+  <input id="location" placeholder="Delivery Location" />
+  <input id="qty" placeholder="QTY" oninput="calculateTotal()" />
+  <input id="price" placeholder="Price" oninput="calculateTotal()" />
+  <input id="total" placeholder="Total Price" readonly />
+  <input id="date" placeholder="Received Date" type="date" />
+  <input id="itemType" placeholder="Item Type" />
+  <input id="city" placeholder="Delivery City" />
+  <input id="status" placeholder="Status" />
+  <input id="details" placeholder="Order Details" />
+  <input id="remark" placeholder="Remark" />
+  <br/><br/>
+  <button onclick="submitData()">Submit</button>
+  <button onclick="clearFields()">Clear</button>
+
+  <hr/>
+  <h4>Search</h4>
+  <input id="searchKeyword" placeholder="Tracking ID or Customer Name" />
+  <button onclick="searchData()">Search</button>
+
+  <div id="searchResult"></div>
+</div>
+
+<script>
+  function calculateTotal() {
+    let qty = parseFloat(document.getElementById('qty').value) || 0;
+    let price = parseFloat(document.getElementById('price').value) || 0;
+    document.getElementById('total').value = qty * price;
+  }
+
+  function submitData() {
+    const data = {
+      name: document.getElementById('name').value,
+      location: document.getElementById('location').value,
+      qty: document.getElementById('qty').value,
+      price: document.getElementById('price').value,
+      date: document.getElementById('date').value,
+      itemType: document.getElementById('itemType').value,
+      city: document.getElementById('city').value,
+      status: document.getElementById('status').value,
+      orderDetails: document.getElementById('details').value,
+      remark: document.getElementById('remark').value
+    };
+    google.script.run.withSuccessHandler(res => {
+      alert("Submitted: " + res.trackingID);
+      clearFields();
+    }).submitData(data);
+  }
+
+  function searchData() {
+    const keyword = document.getElementById('searchKeyword').value;
+    google.script.run.withSuccessHandler(data => {
+      if (!data) {
+        document.getElementById('searchResult').innerText = 'No result found.';
+        return;
+      }
+      document.getElementById('searchResult').innerHTML = `
+        <strong>Tracking ID:</strong> ${data[0]}<br>
+        <strong>Customer:</strong> ${data[1]}<br>
+        <strong>Location:</strong> ${data[2]}<br>
+        <strong>Total:</strong> ${data[5]}<br>
+        <strong>City:</strong> ${data[8]}<br>
+        <strong>Remark:</strong> ${data[11]}
+      `;
+    }).searchData(keyword);
+  }
+
+  function clearFields() {
+    document.querySelectorAll('input').forEach(input => input.value = '');
+    document.getElementById('searchResult').innerHTML = '';
+  }
+
+  function logout() {
+    location.reload(); // reload to go back to login
+  }
+</script>
