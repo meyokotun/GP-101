@@ -1,0 +1,127 @@
+<div style="padding:20px;">
+  <h3>Admin Panel</h3>
+  <button onclick="logout()" style="float:right;">Logout</button>
+
+  <input id="trackingID" placeholder="Tracking ID (auto-filled for edit)" readonly />
+  <input id="name" placeholder="Customer Name" />
+  <input id="location" placeholder="Delivery Location" />
+  <input id="qty" placeholder="QTY" oninput="calculateTotal()" />
+  <input id="price" placeholder="Price" oninput="calculateTotal()" />
+  <input id="total" placeholder="Total Price" readonly />
+  <input id="date" placeholder="Received Date" type="date" />
+  <input id="itemType" placeholder="Item Type" />
+  <input id="city" placeholder="Delivery City" />
+  <input id="status" placeholder="Status" />
+  <input id="details" placeholder="Order Details" />
+  <input id="remark" placeholder="Remark" />
+
+  <br/><br/>
+  <button onclick="submitData()">Create</button>
+  <button onclick="updateData()">Update</button>
+  <button onclick="deleteData()">Delete</button>
+  <button onclick="clearFields()">Clear</button>
+
+  <hr/>
+  <h4>Search</h4>
+  <input id="searchKeyword" placeholder="Tracking ID or Customer Name" />
+  <button onclick="searchData()">Search</button>
+
+  <div id="searchResult"></div>
+</div>
+
+<script>
+  function calculateTotal() {
+    let qty = parseFloat(document.getElementById('qty').value) || 0;
+    let price = parseFloat(document.getElementById('price').value) || 0;
+    document.getElementById('total').value = qty * price;
+  }
+
+  function submitData() {
+    const data = gatherFormData();
+    google.script.run.withSuccessHandler(res => {
+      alert("Created: " + res.trackingID);
+      document.getElementById('trackingID').value = res.trackingID;
+      document.getElementById('total').value = res.totalPrice;
+    }).submitData(data);
+  }
+
+  function searchData() {
+    const keyword = document.getElementById('searchKeyword').value;
+    google.script.run.withSuccessHandler(data => {
+      if (!data) {
+        document.getElementById('searchResult').innerText = 'No result found.';
+        return;
+      }
+      populateFields(data);
+      document.getElementById('searchResult').innerHTML = `
+        <strong>Found:</strong> ${data[0]} - ${data[1]}
+      `;
+    }).searchData(keyword);
+  }
+
+  function updateData() {
+    const data = gatherFormData();
+    data.trackingID = document.getElementById('trackingID').value;
+    google.script.run.withSuccessHandler(res => {
+      if (res.success) {
+        alert("Updated: " + data.trackingID);
+        document.getElementById('total').value = res.totalPrice;
+      } else {
+        alert("Update failed. Tracking ID not found.");
+      }
+    }).updateData(data);
+  }
+
+  function deleteData() {
+    const trackingID = document.getElementById('trackingID').value;
+    if (!trackingID) {
+      alert("Enter Tracking ID to delete.");
+      return;
+    }
+    if (confirm("Are you sure you want to delete " + trackingID + "?")) {
+      google.script.run.withSuccessHandler(success => {
+        alert(success ? "Deleted successfully" : "Delete failed");
+        clearFields();
+      }).deleteData(trackingID);
+    }
+  }
+
+  function clearFields() {
+    document.querySelectorAll('input').forEach(input => input.value = '');
+    document.getElementById('searchResult').innerHTML = '';
+  }
+
+  function gatherFormData() {
+    return {
+      name: document.getElementById('name').value,
+      location: document.getElementById('location').value,
+      qty: document.getElementById('qty').value,
+      price: document.getElementById('price').value,
+      date: document.getElementById('date').value,
+      itemType: document.getElementById('itemType').value,
+      city: document.getElementById('city').value,
+      status: document.getElementById('status').value,
+      orderDetails: document.getElementById('details').value,
+      remark: document.getElementById('remark').value
+    };
+  }
+
+  function populateFields(data) {
+    document.getElementById('trackingID').value = data[0];
+    document.getElementById('name').value = data[1];
+    document.getElementById('location').value = data[2];
+    document.getElementById('qty').value = data[3];
+    document.getElementById('price').value = data[4];
+    document.getElementById('total').value = data[5];
+    document.getElementById('date').value = data[6];
+    document.getElementById('itemType').value = data[7];
+    document.getElementById('city').value = data[8];
+    document.getElementById('status').value = data[9];
+    document.getElementById('details').value = data[10];
+    document.getElementById('remark').value = data[11];
+  }
+
+  function logout() {
+    location.reload();
+  }
+</script>
