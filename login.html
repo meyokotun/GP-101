@@ -1,0 +1,23 @@
+<div style="max-width: 400px; margin: 50px auto; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+  <h2 style="text-align:center;">Login</h2>
+  <input id="username" type="text" placeholder="Username" style="width:100%; padding:10px; margin:10px 0;" />
+  <input id="password" type="password" placeholder="Password" style="width:100%; padding:10px; margin:10px 0;" />
+  <button onclick="login()" style="width:100%; padding:10px; background:#28a745; color:white; border:none; border-radius:6px;">Login</button>
+  <p id="error" style="color:red; text-align:center;"></p>
+</div>
+
+<script>
+  function login() {
+    const user = document.getElementById('username').value;
+    const pass = document.getElementById('password').value;
+    google.script.run.withSuccessHandler(role => {
+      if (role === 'User') {
+        document.body.innerHTML = `<?!= include('userPanel') ?>`;
+      } else if (role === 'Admin') {
+        document.body.innerHTML = `<?!= include('adminPanel') ?>`;
+      } else {
+        document.getElementById('error').innerText = 'Invalid login';
+      }
+    }).checkLogin(user, pass);
+  }
+</script>
